@@ -8,11 +8,7 @@ public class mySpark {
 
     public static void main(String[] args) throws IOException {
         HTTPServer.get("/hello", str -> "Hello " + str);
-        HTTPServer.get("/upload", str ->{
-            return HTTPServer.findBoundaries(str);
-        });
+        HTTPServer.get("/upload", str -> HTTPServer.getFileRemaster(str));
         HTTPServer.getInstance().start(args);
     }
-
-
 }

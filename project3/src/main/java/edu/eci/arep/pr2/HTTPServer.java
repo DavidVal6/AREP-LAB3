@@ -36,77 +36,57 @@ public class HTTPServer {
         return instance;
     }
 
-    public static void start(String[] args) throws IOException {
-        ServerSocket serverSocket = null;
+    public void start(String[] args) {
         try {
-            serverSocket = new ServerSocket(35000);
+            ServerSocket serverSocket = new ServerSocket(35000);
+            System.out.println("Listo para recibir...");
+            while (true) {
+                Socket clientSocket = serverSocket.accept();
+                handleRequest(clientSocket);
+            }
         } catch (IOException e) {
             System.err.println("Could not listen on port: 35000.");
             System.exit(1);
         }
-        boolean running = true;
-        while (running) {
+    }
 
-            clientSocket = null;
-            try {
-                System.out.println("Listo para recibir ...");
-                clientSocket = serverSocket.accept();
-            } catch (IOException e) {
-                System.err.println("Accept failed.");
-                System.exit(1);
-            }
+    public void handleRequest(Socket clientSocket) {
+        try {
             out = new PrintWriter(clientSocket.getOutputStream(), true);
-            BufferedReader in = new BufferedReader(
-                    new InputStreamReader(
-                            clientSocket.getInputStream()));
-            String inputLine, outputLine;
-            //boolean fline = true;
-            //boolean necessaryFlag = true;
-            String uriS = "";
-            //String uriWithFileName = "";
-            while ((inputLine = in.readLine()) != null) {
-                System.out.println("Received: " + inputLine);
+            BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 
+            String uriString = "";
+            String inputLine;
+            while ((inputLine = in.readLine()) != null) {
+                // if(!inputLine.equals("GET /favicon.ico HTTP/1.1"))
+                System.out.println("Received: " + inputLine);
                 if (inputLine.startsWith("GET")) {
-                    uriS = inputLine.split(" ")[1];
+                    uriString = inputLine.split(" ")[1];
+                    break;
+                } else if (inputLine.startsWith("POST")) {
+                    uriString = inputLine.split(" ")[1];
                     break;
                 }
             }
-            if (!uriS.equals("/")) {
-                String service = uriS.split("\\?")[0];
-                String resource = uriS.split("=")[1];
-                outputLine = search(service).handle(resource);
+
+            String outputLine = "";
+            if (!uriString.equals("/favicon.ico") && !uriString.equals("/")) {
+                String[] uriParts = uriString.split("\\?");
+                String serviceToUse = uriParts[0];
+                String strToGive = uriParts[1].split("=")[1];
+
+                outputLine = search(serviceToUse).handle(strToGive);
             } else {
                 outputLine = getHomeIndex();
             }
             out.println(outputLine);
 
-            /*
-             * }
-             * if (necessaryFlag) {
-             * if (fline) {
-             * fline = false;
-             * }
-             * if (inputLine.startsWith("Content-Disposition:")) {
-             * necessaryFlag = false;
-             * uriWithFileName = inputLine;
-             * }
-             * }
-             * if (!in.ready()) {
-             * break;
-             * }
-             * }
-             * if (uriS.startsWith("/upload")) {
-             * outputLine=findBoundaries(uriWithFileName);
-             * }
-             * else {
-             * outputLine=getHomeIndex();
-             * }
-             */
-            // out.println(outputLine);
             out.close();
             in.close();
+
             clientSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -122,10 +102,10 @@ public class HTTPServer {
         return service.get(uString);
     }
 
-    public static String getArchiveRemaster(String filename){
-        
+    public static String getFileRemaster(String inputString){
+        String path = "src\\main\\resource\\";
+        return getTheArchive(inputString, path);
     }
-
     /**
      * This method will find the boundaries part in the response finding the name of
      * the file of it
@@ -143,14 +123,14 @@ public class HTTPServer {
         String filename = null;
         for (String part : parts) {
             if (part.trim().startsWith("filename")) {
-                // Extraer el nombre del archivo de la parte 'filename'
-                String[] filenameParts = part.split("=");
-                if (filenameParts.length > 1) {
-                    filename = filenameParts[1].trim().replace("\"", "");
+                // Extract the name parameter
+                String[] nameParts = part.split("=");
+                if (nameParts.length > 1) {
+                    filename = nameParts[1].trim().replace("\"", "");
                 }
             }
         }
-        String path = "project3\\src\\main\\resource\\";
+        String path = "src\\main\\resource\\";
         return getTheArchive(filename, path);
     }
 
