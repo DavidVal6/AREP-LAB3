@@ -1,10 +1,10 @@
 # LABORATORIO 3
 
 ## Introduccion
-Este laboratorio se ha hecho con funciones lambda ubicadas en una clase llamada [mySpark](src/main/java/edu/eci/arep/lambda/mySpark.java) en donde se hacen los get sobre el [httpServer](src/main/java/edu/eci/arep/pr2/HTTPServer.java) y atravez de consultas GET o POST se obtendran los archivos ubicados en el directorio de [recursos](src/main/resource/).
+Este laboratorio se ha hecho con funciones lambda ubicadas en una clase llamada [mySpark](project3/src/main/java/edu/eci/arep/lambda/mySpark.java) en donde se hacen los get sobre el [httpServer](project3/src/main/java/edu/eci/arep/pr2/HTTPServer.java) y atravez de consultas GET o POST se obtendran los archivos ubicados en el directorio de [recursos](project3/src/main/resource/).
 
 ## ¿Como Ejecutar?
-Se debe de ejecutar en el main de [mySpark](src/main/java/edu/eci/arep/lambda/mySpark.java) una vez se ejecute y en la terminal aparezca ```listo para recibir.... ``` se puede hacer pedir los archivos que se encuentran en el archivo de [recursos](src/main/resource/).
+Se debe de ejecutar en el main de [mySpark](project3/src/main/java/edu/eci/arep/lambda/mySpark.java) una vez se ejecute y en la terminal aparezca ```listo para recibir.... ``` se puede hacer pedir los archivos que se encuentran en el archivo de [recursos](project3/src/main/resource/).
 
 y para pedirlo se debe pedir de la siguiente manera:
 ```localhost:35000/upload?name=<nombreArchivo>``` y asi recuperara la información o el archivo en la pantalla.
