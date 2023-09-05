@@ -42,7 +42,42 @@ public class HTTPServer {
             System.out.println("Listo para recibir...");
             while (true) {
                 Socket clientSocket = serverSocket.accept();
-                handleRequest(clientSocket);
+                try {
+                    out = new PrintWriter(clientSocket.getOutputStream(), true);
+                    BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+
+                    String uriS = "";
+                    String inputLine;
+                    while ((inputLine = in.readLine()) != null) {
+                        System.out.println("Received: " + inputLine);
+                        if (inputLine.startsWith("GET")) {
+                            uriS = inputLine.split(" ")[1];
+                            break;
+                        } else if (inputLine.startsWith("POST")) {
+                            uriS = inputLine.split(" ")[1];
+                            break;
+                        }
+                    }
+
+                    String outputLine = "";
+                    if (!uriS.equals("/favicon.ico") && !uriS.equals("/")) {
+                        String[] uri = uriS.split("\\?");
+                        String service = uri[0];
+                        String strToGive = uri[1].split("=")[1];
+
+                        outputLine = search(service).handle(strToGive);
+                    } else {
+                        outputLine = getHomeIndex();
+                    }
+                    out.println(outputLine);
+
+                    out.close();
+                    in.close();
+
+                    clientSocket.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         } catch (IOException e) {
             System.err.println("Could not listen on port: 35000.");
@@ -50,45 +85,6 @@ public class HTTPServer {
         }
     }
 
-    public void handleRequest(Socket clientSocket) {
-        try {
-            out = new PrintWriter(clientSocket.getOutputStream(), true);
-            BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-
-            String uriString = "";
-            String inputLine;
-            while ((inputLine = in.readLine()) != null) {
-                // if(!inputLine.equals("GET /favicon.ico HTTP/1.1"))
-                System.out.println("Received: " + inputLine);
-                if (inputLine.startsWith("GET")) {
-                    uriString = inputLine.split(" ")[1];
-                    break;
-                } else if (inputLine.startsWith("POST")) {
-                    uriString = inputLine.split(" ")[1];
-                    break;
-                }
-            }
-
-            String outputLine = "";
-            if (!uriString.equals("/favicon.ico") && !uriString.equals("/")) {
-                String[] uriParts = uriString.split("\\?");
-                String serviceToUse = uriParts[0];
-                String strToGive = uriParts[1].split("=")[1];
-
-                outputLine = search(serviceToUse).handle(strToGive);
-            } else {
-                outputLine = getHomeIndex();
-            }
-            out.println(outputLine);
-
-            out.close();
-            in.close();
-
-            clientSocket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
     public static PrintWriter getOut() {
         return out;
@@ -102,10 +98,11 @@ public class HTTPServer {
         return service.get(uString);
     }
 
-    public static String getFileRemaster(String inputString){
-        String path = "src\\main\\resource\\";
+    public static String getFileRemaster(String inputString) {
+        String path = "project3\\src\\main\\resource\\";
         return getTheArchive(inputString, path);
     }
+
     /**
      * This method will find the boundaries part in the response finding the name of
      * the file of it
@@ -130,7 +127,7 @@ public class HTTPServer {
                 }
             }
         }
-        String path = "src\\main\\resource\\";
+        String path = "project3\\src\\main\\resource\\";
         return getTheArchive(filename, path);
     }
 
@@ -201,9 +198,17 @@ public class HTTPServer {
         byte[] bytes = Files.readAllBytes(file.toPath());
         String base64 = Base64.getEncoder().encodeToString(bytes);
         return "HTTP/1.1 200 OK\r\n"
-                + "Content-Type: text/" + type + "\r\n"
+                + "Content-Type: text/html\r\n"
                 + "\r\n"
-                + "<center><img src=\"data:image/" + type + ";base64," + base64 + "\"></center>";
+                + "<!DOCTYPE html>\r\n"
+                + "<html>\r\n"
+                + "    <head>\r\n"
+                + "        <title>File Content</title>\r\n"
+                + "    </head>\r\n"
+                + "    <body>\r\n"
+                + "         <center><img src=\"data:image/jpeg;base64," + base64 + "\" alt=\"image\"></center>" + "\r\n"
+                + "    </body>\r\n"
+                + "</html>";
     }
 
     public static String toHTML(File file) throws IOException {
@@ -211,23 +216,50 @@ public class HTTPServer {
         return "HTTP/1.1 200 OK\r\n"
                 + "Content-Type: text/html\r\n"
                 + "\r\n"
-                + "<center>" + body + "</center>";
+                + "<!DOCTYPE html>\r\n" + //
+                "<html>\r\n" + //
+                "    <head>\r\n" + //
+                "        <meta charset=\"UTF-8\">\r\n" + //
+                "        <title>File Adder</title>\r\n" + //
+                "    </head>\r\n" + //
+                "    <body>\r\n" + //
+                "        <pre>" + body + "</pre>\r\n" + //
+                "    </body>\r\n" + //
+                "</html>";
     }
 
     public static String toCSS(File file) throws IOException {
         StringBuilder body = fromArchiveToString(file);
         return "HTTP/1.1 200 OK\r\n"
-                + "Content-Type: text/css\r\n"
+                + "Content-Type: text/html\r\n"
                 + "\r\n"
-                + "<center>" + body + "</center>";
+                + "<!DOCTYPE html>\r\n" + //
+                "<html>\r\n" + //
+                "    <head>\r\n" + //
+                "        <meta charset=\"UTF-8\">\r\n" + //
+                "        <title>File Adder</title>\r\n" + //
+                "    </head>\r\n" + //
+                "    <body>\r\n" + //
+                "        <pre>" + body + "</pre>\r\n" + //
+                "    </body>\r\n" + //
+                "</html>";
     }
 
     public static String toJs(File file) throws IOException {
         StringBuilder body = fromArchiveToString(file);
         return "HTTP/1.1 200 OK\r\n"
-                + "Content-Type: application/javascript\r\n"
+                + "Content-Type: text/html\r\n"
                 + "\r\n"
-                + "<center>" + body + "</center>";
+                + "<!DOCTYPE html>\r\n" + //
+                "<html>\r\n" + //
+                "    <head>\r\n" + //
+                "        <meta charset=\"UTF-8\">\r\n" + //
+                "        <title>File Adder</title>\r\n" + //
+                "    </head>\r\n" + //
+                "    <body>\r\n" + //
+                "        <pre>" + body + "</pre>\r\n" + //
+                "    </body>\r\n" + //
+                "</html>";
     }
 
     /**
