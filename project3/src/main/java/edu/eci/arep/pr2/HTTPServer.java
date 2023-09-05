@@ -99,7 +99,7 @@ public class HTTPServer {
     }
 
     public static String getFileRemaster(String inputString) {
-        String path = "project3\\src\\main\\resource\\";
+        String path = "AREP-LAB3\\project3\\src\\main\\resource\\";
         return getTheArchive(inputString, path);
     }
 
@@ -127,7 +127,7 @@ public class HTTPServer {
                 }
             }
         }
-        String path = "project3\\src\\main\\resource\\";
+        String path = "AREP-LAB3\\project3\\src\\main\\resource\\";
         return getTheArchive(filename, path);
     }
 
